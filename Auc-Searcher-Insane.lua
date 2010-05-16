@@ -109,6 +109,11 @@ function lib.Search(item)
 
 	local limit = get("insane.deckprice");
 
+	if (buyprice == 0) then
+
+		return false, "nope";
+	end
+
 
 	-- epic cards
 	if (epicCards[item[Const.ITEMID]] and (priceper <= limit / 8)) then
