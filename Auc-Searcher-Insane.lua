@@ -77,12 +77,20 @@ local regDecks = private.createMap({
 	44158, 44185, -- demons
 0});
 
-local rogueHerbs = private.createMap({
+local rogue50Herbs = private.createMap({
 	3820, -- Stranglekelp
 	2453, -- Bruiseweed
+0});
+
+local rogue25Herbs = private.createMap({
 	2450, -- Briarthorn
-	785, -- Mageroyal
+	785,  -- Mageroyal
 	2452, -- Swiftthistle
+0});
+
+local rogueInks = private.createMap({
+	43103, -- Verdant Pigment
+	43115, -- Hunter's Ink
 0});
 
 
@@ -133,9 +141,10 @@ function lib.Search(item)
 	-- reg decks
 	if (regDecks[item[Const.ITEMID]] and (priceper <= limit / 14)) then return "buy"; end
 
-	-- herbs (10 herbs => 1 rogues card)
-	if (rogueHerbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 10))) then return "buy"; end
-
+	-- herbs (10/20 herbs => 1 rogues card)
+	if (rogue50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 10))) then return "buy"; end
+	if (rogue25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 20))) then return "buy"; end
+	if (rogueInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 3))) then return "buy"; end
 
 	return false, "nope";
 end

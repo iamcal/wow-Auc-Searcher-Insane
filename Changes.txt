@@ -1,5 +1,7 @@
 1.0
-* first relase
+ * first relase
 
 1.1
-* don't match items with no buyouy price
+ * don't match items with no buyout price
+ * treat 25% and 50% herbs differently
+ * include verdant pigment & hunter's ink
