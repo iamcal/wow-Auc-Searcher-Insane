@@ -1,5 +1,5 @@
 1.0
- * first relase
+ * first release
 
 1.1
  * don't match items with no buyout price
