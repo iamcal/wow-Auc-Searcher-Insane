@@ -5,3 +5,4 @@
  * don't match items with no buyout price
  * treat 25% and 50% herbs differently
  * include verdant pigment & hunter's ink
+ * fix 7 of blessings item id (was matching a random gem)
