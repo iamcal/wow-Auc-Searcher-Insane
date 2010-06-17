@@ -7,6 +7,11 @@ lib.tabname = "Insane"
 
 -- Set our defaults
 default("insane.deckprice", 2500000)
+default("insane.craft.rogue", 1)
+default("insane.craft.sword", 1)
+default("insane.craft.mage", 1)
+default("insane.craft.demon", 1)
+default("insane.craft.vanilla", 1)
 
 function private.createMap(x)
 
@@ -77,6 +82,8 @@ local regDecks = private.createMap({
 	44158, 44185, -- demons
 0});
 
+-- **************************************************
+
 local rogue50Herbs = private.createMap({
 	3820, -- Stranglekelp
 	2453, -- Bruiseweed
@@ -93,6 +100,82 @@ local rogueInks = private.createMap({
 	43115, -- Hunter's Ink
 0});
 
+-- **************************************************
+
+local sword50Herbs = private.createMap({
+	3356, -- Kingsblood
+	3357, -- Liferoot
+0});
+
+local sword25Herbs = private.createMap({
+	3369, -- Grave Moss
+	3355, -- Wild Steelbloom
+0});
+
+local swordInks = private.createMap({
+	43104, -- Burnt Pigment
+	43117, -- Dawnstar Ink
+0});
+
+-- **************************************************
+
+local mage50Herbs = private.createMap({
+	3358, -- Khadgar's Whisker
+	3819, -- Wintersbite
+0});
+
+local mage25Herbs = private.createMap({
+	3818, -- Fadeleaf
+	3821, -- Goldthorn
+0});
+
+local mageInks = private.createMap({
+	43105, -- Indigo Pigment
+	43119, -- Royal Ink
+0});
+
+-- **************************************************
+
+local demon50Herbs = private.createMap({
+	8845, -- Ghost Mushroom
+	8839, -- Blindweed
+	8846, -- Gromsblood
+0});
+
+local demon25Herbs = private.createMap({
+	8836, -- Arthas' Tears
+	4625, -- Firebloom
+	8831, -- Purple Lotus
+	8838, -- Sungrass
+0});
+
+local demonInks = private.createMap({
+	43106, -- Ruby Pigment
+	43121, -- Fiery Ink
+0});
+
+-- **************************************************
+
+local vanilla50Herbs = private.createMap({
+	13465, -- Mountain Silversage
+	13466, -- Plaguebloom
+	13467, -- Icecap
+0});
+
+local vanilla25Herbs = private.createMap({
+	13463, -- Dreamfoil
+	13464, -- Golden Sansam
+0});
+
+local vanillaInks = private.createMap({
+	43107, -- Sapphire Pigment
+	43123, -- Ink of the Sky
+0});
+
+-- **************************************************
+
+
+
 
 function lib:MakeGuiConfig(gui)
 	-- Get our tab and populate it with our controls
@@ -105,7 +188,15 @@ function lib:MakeGuiConfig(gui)
 
 	local last = gui:GetLast(id)
 
-	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.deckprice", 1, 99999999, "Maximum Price for Epic Deck")
+	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.deckprice", 1, 99999999, "Maximum Price for Epic Deck");
+
+	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.rogue"  , "Craft Rogues cards (85 Inscription)"      ); -- lvl 10
+	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.sword"  , "Craft Swords cards (125 Inscription)"     ); -- lvl 10
+	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.mage"   , "Craft Mages cards (175 Inscription)"      ); -- lvl 20
+	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.demon"  , "Craft Demons cards (225 Inscription)"     ); -- lvl 20
+	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.vanilla", "Craft Vanilla WoW cards (275 Inscription)"); -- lvl 35
+	-- BC: 325 (lvl 50)
+	-- WotlK: 400 (lvl 65)
 end
 
 function lib.Search(item)
@@ -124,14 +215,10 @@ function lib.Search(item)
 
 
 	-- epic cards
-	if (epicCards[item[Const.ITEMID]] and (priceper <= limit / 8)) then
-		return "buy";
-	end
+	if (epicCards[item[Const.ITEMID]] and (priceper <= limit / 8)) then return "buy"; end
 
 	-- epic decks
-	if (epicDecks[item[Const.ITEMID]] and (priceper <= limit)) then
-		return "buy";
-	end
+	if (epicDecks[item[Const.ITEMID]] and (priceper <= limit)) then return "buy"; end
 
 	-- reg cards
 	if (reg3Cards[item[Const.ITEMID]] and (priceper <= limit / (14 * 3))) then return "buy"; end
@@ -141,10 +228,55 @@ function lib.Search(item)
 	-- reg decks
 	if (regDecks[item[Const.ITEMID]] and (priceper <= limit / 14)) then return "buy"; end
 
-	-- herbs (10/20 herbs => 1 rogues card)
-	if (rogue50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 10))) then return "buy"; end
-	if (rogue25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 20))) then return "buy"; end
-	if (rogueInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 3))) then return "buy"; end
+
+	-- rogue crafted
+	-- 14: minor decks to a full deck
+	-- 3: cards in deck
+	if (get("insane.craft.rogue")) then
+		if (rogue50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 10))) then return "buy"; end
+		if (rogue25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 20))) then return "buy"; end
+		if (rogueInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 3))) then return "buy"; end
+	end
+
+	-- sword crafted
+	-- 14: minor decks to a full deck
+	-- 4: cards in deck
+	-- 2: inks per card
+	if (get("insane.craft.sword")) then
+		if (sword50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 4 * 10 * 2))) then return "buy"; end
+		if (sword25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 4 * 20 * 2))) then return "buy"; end
+		if (swordInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 4 * 2))) then return "buy"; end
+	end
+
+	-- mage crafted
+	-- 14: minor decks to a full deck
+	-- 5: cards in deck
+	-- 2: inks per card
+	if (get("insane.craft.mage")) then
+		if (mage50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 10 * 2))) then return "buy"; end
+		if (mage25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 20 * 2))) then return "buy"; end
+		if (mageInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 2))) then return "buy"; end
+	end
+
+
+	-- demone crafted
+	-- 14: minor decks to a full deck
+	-- 5: cards in deck
+	-- 2: inks per card
+	if (get("insane.craft.demon")) then
+		if (demon50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 10 * 2))) then return "buy"; end
+		if (demon25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 20 * 2))) then return "buy"; end
+		if (demonInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 2))) then return "buy"; end
+	end
+
+	-- vanilla crafted
+	-- 8: cards in deck
+	-- 5: inks per card
+	if (get("insane.craft.vanilla")) then
+		if (vanilla50Herbs[item[Const.ITEMID]] and (priceper <= limit / (8 * 10 * 5))) then return "buy"; end
+		if (vanilla25Herbs[item[Const.ITEMID]] and (priceper <= limit / (8 * 20 * 5))) then return "buy"; end
+		if (vanillaInks[item[Const.ITEMID]] and (priceper <= limit / (8 * 5))) then return "buy"; end
+	end
 
 	return false, "nope";
 end

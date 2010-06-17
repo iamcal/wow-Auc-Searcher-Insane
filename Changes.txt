@@ -8,4 +8,6 @@
  * fix 7 of blessings item id (was matching a random gem)
 
 1.2
- * ?
+ * added crafting materials for swords, mages & demons decks
+ * added crafting materials for vanilla decks
+ * added options for each crafting tier
