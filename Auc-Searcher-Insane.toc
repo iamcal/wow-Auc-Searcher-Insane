@@ -2,7 +2,7 @@
 ## Title: Auc:Searcher:Insane
 ## Notes: Allows searching of Auctioneer data for Insane items
 ## Author: Cal Henderson (Bees on Hyjal-US)
-## Version: 1.3
+## Version: 1.4
 ## LoadOnDemand: 0
 ## Disabled: 0
 ## Dependencies: Auc-Advanced
