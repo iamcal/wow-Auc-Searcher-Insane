@@ -12,6 +12,10 @@ default("insane.craft.sword", 1)
 default("insane.craft.mage", 1)
 default("insane.craft.demon", 1)
 default("insane.craft.vanilla", 1)
+default("insane.craft.tbc", 1)
+default("insane.craft.wotlk", 1)
+default("insane.overhead.primal", 100000)
+default("insane.overhead.eternal", 150000)
 
 function private.createMap(x)
 
@@ -174,6 +178,52 @@ local vanillaInks = private.createMap({
 
 -- **************************************************
 
+local tbc50Herbs = private.createMap({
+	22791, -- Netherbloom
+	22792, -- Nightmare Vine
+	22790, -- Ancient Lichen
+	22793, -- Mana Thistle
+0});
+
+local tbc25Herbs = private.createMap({
+	22786, -- Dreaming Glory
+	22785, -- Felweed
+	22789, -- Terocone
+	22787, -- Ragveil
+0});
+
+local tbcInks = private.createMap({
+	43108, -- Ebon Pigment
+	43125, -- Darkflame Ink
+0});
+
+-- **************************************************
+
+local wotlk50Herbs = private.createMap({
+	36903, -- Adder's Tongue
+	36906, -- Icethorn
+	36905, -- Lichbloom
+0});
+
+local wotlk25Herbs = private.createMap({
+	39969, -- Fire Seed
+	37921, -- Deadnettle
+	36901, -- Goldclover
+	36907, -- Talandra's Rose
+	36904, -- Tiger Lily
+	39970, -- Fire Leaf
+0});
+
+local wotlkPigments = private.createMap({
+	43109, -- Icy Pigment
+0});
+
+local wotlkInks = private.createMap({
+	43127, -- Snowfall Ink
+0});
+
+-- **************************************************
+
 
 
 
@@ -195,8 +245,11 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.mage"   , "Craft Mages cards (175 Inscription)"      ); -- lvl 20
 	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.demon"  , "Craft Demons cards (225 Inscription)"     ); -- lvl 20
 	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.vanilla", "Craft Vanilla WoW cards (275 Inscription)"); -- lvl 35
-	-- BC: 325 (lvl 50)
-	-- WotlK: 400 (lvl 65)
+	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.tbc"    , "Craft TBC cards (325 Inscription)"        ); -- lvl 50
+	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.wotlk"  , "Craft WotLK cards (400 Inscription)"      ); -- lvl 65
+
+	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.overhead.primal", 1, 99999999, "Cost of Primal Life");
+	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.overhead.eternal", 1, 99999999, "Cost of Eternal Life");
 end
 
 function lib.Search(item)
@@ -205,77 +258,116 @@ function lib.Search(item)
 	local buyprice = item[Const.BUYOUT];
 	local stacksize = item[Const.COUNT];
 	local priceper = buyprice / stacksize;
-
 	local limit = get("insane.deckprice");
 
-	if (buyprice == 0) then
+	if (buyprice == 0) then	return false, "nope"; end
 
-		return false, "nope";
-	end
-
+	local per_deck = 0; -- number of these items needed per deck
+	local overhead = 0; -- overhead cost (per deck) when using this item
 
 	-- epic cards
-	if (epicCards[item[Const.ITEMID]] and (priceper <= limit / 8)) then return "buy"; end
+	if (epicCards[item[Const.ITEMID]]) then per_deck = 8; end
 
 	-- epic decks
-	if (epicDecks[item[Const.ITEMID]] and (priceper <= limit)) then return "buy"; end
+	if (epicDecks[item[Const.ITEMID]]) then per_deck = 1; end
 
 	-- reg cards
-	if (reg3Cards[item[Const.ITEMID]] and (priceper <= limit / (14 * 3))) then return "buy"; end
-	if (reg4Cards[item[Const.ITEMID]] and (priceper <= limit / (14 * 4))) then return "buy"; end
-	if (reg5Cards[item[Const.ITEMID]] and (priceper <= limit / (14 * 5))) then return "buy"; end
+	if (reg3Cards[item[Const.ITEMID]]) then per_deck = 14 * 3; end
+	if (reg4Cards[item[Const.ITEMID]]) then per_deck = 14 * 4; end
+	if (reg5Cards[item[Const.ITEMID]]) then per_deck = 14 * 5; end
 
 	-- reg decks
-	if (regDecks[item[Const.ITEMID]] and (priceper <= limit / 14)) then return "buy"; end
+	if (regDecks[item[Const.ITEMID]]) then per_deck = 14; end
 
 
 	-- rogue crafted
 	-- 14: minor decks to a full deck
 	-- 3: cards in deck
+	--
+	-- light parchment: 0.0.15
 	if (get("insane.craft.rogue")) then
-		if (rogue50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 10))) then return "buy"; end
-		if (rogue25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 3 * 20))) then return "buy"; end
-		if (rogueInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 3))) then return "buy"; end
+		if (rogue50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 3 * 10; overhead = 14 * 3 * 15; end
+		if (rogue25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 3 * 20; overhead = 14 * 3 * 15; end
+		if (rogueInks[item[Const.ITEMID]]   ) then per_deck = 14 * 3;      overhead = 14 * 3 * 15; end
 	end
 
 	-- sword crafted
 	-- 14: minor decks to a full deck
 	-- 4: cards in deck
 	-- 2: inks per card
+	--
+	-- common parchment: 0.1.25
 	if (get("insane.craft.sword")) then
-		if (sword50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 4 * 10 * 2))) then return "buy"; end
-		if (sword25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 4 * 20 * 2))) then return "buy"; end
-		if (swordInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 4 * 2))) then return "buy"; end
+		if (sword50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 4 * 10 * 2; overhead = 14 * 4 * 125; end
+		if (sword25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 4 * 20 * 2; overhead = 14 * 4 * 125; end
+		if (swordInks[item[Const.ITEMID]]   ) then per_deck = 14 * 4 * 2;      overhead = 14 * 4 * 125; end
 	end
 
 	-- mage crafted
 	-- 14: minor decks to a full deck
 	-- 5: cards in deck
 	-- 2: inks per card
+	--
+	-- common parchment: 0.1.25
 	if (get("insane.craft.mage")) then
-		if (mage50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 10 * 2))) then return "buy"; end
-		if (mage25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 20 * 2))) then return "buy"; end
-		if (mageInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 2))) then return "buy"; end
+		if (mage50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 10 * 2; overhead = 14 * 5 * 125; end
+		if (mage25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 20 * 2; overhead = 14 * 5 * 125; end
+		if (mageInks[item[Const.ITEMID]]   ) then per_deck = 14 * 5 * 2;      overhead = 14 * 5 * 125; end
 	end
 
 
-	-- demone crafted
+	-- demon crafted
 	-- 14: minor decks to a full deck
 	-- 5: cards in deck
 	-- 2: inks per card
+	--
+	-- heavy parchment: 0.12.50
 	if (get("insane.craft.demon")) then
-		if (demon50Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 10 * 2))) then return "buy"; end
-		if (demon25Herbs[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 20 * 2))) then return "buy"; end
-		if (demonInks[item[Const.ITEMID]] and (priceper <= limit / (14 * 5 * 2))) then return "buy"; end
+		if (demon50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 10 * 2; overhead = 14 * 5 * 1250; end
+		if (demon25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 20 * 2; overhead = 14 * 5 * 1250; end
+		if (demonInks[item[Const.ITEMID]]   ) then per_deck = 14 * 5 * 2;      overhead = 14 * 5 * 1250; end
 	end
 
 	-- vanilla crafted
 	-- 8: cards in deck
 	-- 5: inks per card
+	--
+	-- heavy parchment: 0.12.50
 	if (get("insane.craft.vanilla")) then
-		if (vanilla50Herbs[item[Const.ITEMID]] and (priceper <= limit / (8 * 10 * 5))) then return "buy"; end
-		if (vanilla25Herbs[item[Const.ITEMID]] and (priceper <= limit / (8 * 20 * 5))) then return "buy"; end
-		if (vanillaInks[item[Const.ITEMID]] and (priceper <= limit / (8 * 5))) then return "buy"; end
+		if (vanilla50Herbs[item[Const.ITEMID]]) then per_deck = 8 * 10 * 5; overhead = 8 * 1250; end
+		if (vanilla25Herbs[item[Const.ITEMID]]) then per_deck = 8 * 20 * 5; overhead = 8 * 1250; end
+		if (vanillaInks[item[Const.ITEMID]]   ) then per_deck = 8 * 5;      overhead = 8 * 1250; end
+	end
+
+	-- BC crafted
+	-- 8: cards in deck
+	-- 3: inks per card
+	--
+	-- resilient parchment: 0.50.00
+	if (get("insane.craft.tbc")) then
+		if (tbc50Herbs[item[Const.ITEMID]]) then per_deck = 8 * 10 * 3; overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
+		if (tbc25Herbs[item[Const.ITEMID]]) then per_deck = 8 * 20 * 3; overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
+		if (tbcInks[item[Const.ITEMID]]   ) then per_deck = 8 * 3;      overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
+	end
+
+	-- WotLK crafted
+	-- 8: cards in deck
+	-- 6: inks per card
+	-- 2: pigment per ink
+	--
+	-- resilient parchment: 0.50.00
+	if (get("insane.craft.wotlk")) then
+		if (wotlk50Herbs[item[Const.ITEMID]] ) then per_deck = 8 * 10 * 6 * 2; overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+		if (wotlk25Herbs[item[Const.ITEMID]] ) then per_deck = 8 * 20 * 6 * 2; overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+		if (wotlkPigments[item[Const.ITEMID]]) then per_deck = 8 * 6 * 2;      overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+		if (wotlkInks[item[Const.ITEMID]]    ) then per_deck = 8 * 6;          overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+	end
+
+	if (per_deck > 0) then
+		if (priceper <= (limit - overhead) / per_deck) then
+			local factor = priceper / ((limit - overhead) / per_deck);
+			return string.format("%2d%%", 100 * factor);
+		end
 	end
 
 	return false, "nope";

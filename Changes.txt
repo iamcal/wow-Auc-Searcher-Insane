@@ -11,3 +11,10 @@
  * added crafting materials for swords, mages & demons decks
  * added crafting materials for vanilla decks
  * added options for each crafting tier
+
+1.3
+ * added crafting materials for TBC decks
+ * added crafting materials for WotLK decks
+ * added overheads for all crafted decks
+ * added configurable prices for Primal & Eternal Life
+ * show percentage cost of budget in results
