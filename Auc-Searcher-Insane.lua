@@ -16,6 +16,8 @@ default("insane.craft.tbc", 1)
 default("insane.craft.wotlk", 1)
 default("insane.overhead.primal", 100000)
 default("insane.overhead.eternal", 150000)
+default("insane.mats.primal", 1)
+default("insane.mats.eternal", 1)
 
 function private.createMap(x)
 
@@ -224,9 +226,6 @@ local wotlkInks = private.createMap({
 
 -- **************************************************
 
-
-
-
 function lib:MakeGuiConfig(gui)
 	-- Get our tab and populate it with our controls
 	local id = gui:AddTab(lib.tabname, "Searchers")
@@ -235,24 +234,35 @@ function lib:MakeGuiConfig(gui)
 	gui:AddSearcher("Insane", "Search for items for the Insane achievement", 100)
 
 	gui:AddControl(id, "Header", 0, "Insane search criteria")
+	gui:GetLast(id).clearance = 10;
 
 	local last = gui:GetLast(id)
 
-	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.deckprice", 1, 99999999, "Maximum Price for Epic Deck");
+	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.deckprice", 1, 99999999, "Budget per Epic Deck / 350 rep");
+	gui:GetLast(id).clearance = 20;
+	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.overhead.primal", 1, 99999999, "Budget per Primal Life");
+	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.overhead.eternal", 1, 99999999, "Budget per Eternal Life");
 
-	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.rogue"  , "Craft Rogues cards (85 Inscription)"      ); -- lvl 10
-	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.sword"  , "Craft Swords cards (125 Inscription)"     ); -- lvl 10
-	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.mage"   , "Craft Mages cards (175 Inscription)"      ); -- lvl 20
-	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.demon"  , "Craft Demons cards (225 Inscription)"     ); -- lvl 20
-	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.vanilla", "Craft Vanilla WoW cards (275 Inscription)"); -- lvl 35
-	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.tbc"    , "Craft TBC cards (325 Inscription)"        ); -- lvl 50
-	gui:AddControl(id, "Checkbox",          0, 1, "insane.craft.wotlk"  , "Craft WotLK cards (400 Inscription)"      ); -- lvl 65
+	gui:SetLast(id, last)
 
-	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.overhead.primal", 1, 99999999, "Cost of Primal Life");
-	gui:AddControl(id, "MoneyFramePinned",  0, 0, "insane.overhead.eternal", 1, 99999999, "Cost of Eternal Life");
+	gui:AddControl(id, "Checkbox",          0.4, 1, "insane.craft.rogue"  , "Craft Rogues cards (85 Inscription)"      ); -- lvl 10
+	gui:AddControl(id, "Checkbox",          0.4, 1, "insane.craft.sword"  , "Craft Swords cards (125 Inscription)"     ); -- lvl 10
+	gui:AddControl(id, "Checkbox",          0.4, 1, "insane.craft.mage"   , "Craft Mages cards (175 Inscription)"      ); -- lvl 20
+	gui:AddControl(id, "Checkbox",          0.4, 1, "insane.craft.demon"  , "Craft Demons cards (225 Inscription)"     ); -- lvl 20
+	gui:AddControl(id, "Checkbox",          0.4, 1, "insane.craft.vanilla", "Craft Vanilla WoW cards (275 Inscription)"); -- lvl 35
+
+	gui:AddControl(id, "Checkbox",          0.4, 1, "insane.craft.tbc"    , "Craft TBC cards (325 Inscription)"        ); -- lvl 50
+	gui:AddControl(id, "Checkbox",          0.4, 2, "insane.mats.primal" , "Include Primal Lifes");
+	gui:GetLast(id).clearance = 5;
+
+	gui:AddControl(id, "Checkbox",          0.4, 1, "insane.craft.wotlk"  , "Craft WotLK cards (400 Inscription)"      ); -- lvl 65
+	gui:AddControl(id, "Checkbox",          0.4, 2, "insane.mats.eternal", "Include Eternal Lifes");
+	gui:GetLast(id).clearance = 5;
 end
 
 function lib.Search(item)
+
+	local itemid = item[Const.ITEMID];
 
 	-- get cost
 	local buyprice = item[Const.BUYOUT];
@@ -266,18 +276,18 @@ function lib.Search(item)
 	local overhead = 0; -- overhead cost (per deck) when using this item
 
 	-- epic cards
-	if (epicCards[item[Const.ITEMID]]) then per_deck = 8; end
+	if (epicCards[itemid]) then per_deck = 8; end
 
 	-- epic decks
-	if (epicDecks[item[Const.ITEMID]]) then per_deck = 1; end
+	if (epicDecks[itemid]) then per_deck = 1; end
 
 	-- reg cards
-	if (reg3Cards[item[Const.ITEMID]]) then per_deck = 14 * 3; end
-	if (reg4Cards[item[Const.ITEMID]]) then per_deck = 14 * 4; end
-	if (reg5Cards[item[Const.ITEMID]]) then per_deck = 14 * 5; end
+	if (reg3Cards[itemid]) then per_deck = 14 * 3; end
+	if (reg4Cards[itemid]) then per_deck = 14 * 4; end
+	if (reg5Cards[itemid]) then per_deck = 14 * 5; end
 
 	-- reg decks
-	if (regDecks[item[Const.ITEMID]]) then per_deck = 14; end
+	if (regDecks[itemid]) then per_deck = 14; end
 
 
 	-- rogue crafted
@@ -286,9 +296,9 @@ function lib.Search(item)
 	--
 	-- light parchment: 0.0.15
 	if (get("insane.craft.rogue")) then
-		if (rogue50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 3 * 10; overhead = 14 * 3 * 15; end
-		if (rogue25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 3 * 20; overhead = 14 * 3 * 15; end
-		if (rogueInks[item[Const.ITEMID]]   ) then per_deck = 14 * 3;      overhead = 14 * 3 * 15; end
+		if (rogue50Herbs[itemid]) then per_deck = 14 * 3 * 10; overhead = 14 * 3 * 15; end
+		if (rogue25Herbs[itemid]) then per_deck = 14 * 3 * 20; overhead = 14 * 3 * 15; end
+		if (rogueInks[itemid]   ) then per_deck = 14 * 3;      overhead = 14 * 3 * 15; end
 	end
 
 	-- sword crafted
@@ -298,9 +308,9 @@ function lib.Search(item)
 	--
 	-- common parchment: 0.1.25
 	if (get("insane.craft.sword")) then
-		if (sword50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 4 * 10 * 2; overhead = 14 * 4 * 125; end
-		if (sword25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 4 * 20 * 2; overhead = 14 * 4 * 125; end
-		if (swordInks[item[Const.ITEMID]]   ) then per_deck = 14 * 4 * 2;      overhead = 14 * 4 * 125; end
+		if (sword50Herbs[itemid]) then per_deck = 14 * 4 * 10 * 2; overhead = 14 * 4 * 125; end
+		if (sword25Herbs[itemid]) then per_deck = 14 * 4 * 20 * 2; overhead = 14 * 4 * 125; end
+		if (swordInks[itemid]   ) then per_deck = 14 * 4 * 2;      overhead = 14 * 4 * 125; end
 	end
 
 	-- mage crafted
@@ -310,9 +320,9 @@ function lib.Search(item)
 	--
 	-- common parchment: 0.1.25
 	if (get("insane.craft.mage")) then
-		if (mage50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 10 * 2; overhead = 14 * 5 * 125; end
-		if (mage25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 20 * 2; overhead = 14 * 5 * 125; end
-		if (mageInks[item[Const.ITEMID]]   ) then per_deck = 14 * 5 * 2;      overhead = 14 * 5 * 125; end
+		if (mage50Herbs[itemid]) then per_deck = 14 * 5 * 10 * 2; overhead = 14 * 5 * 125; end
+		if (mage25Herbs[itemid]) then per_deck = 14 * 5 * 20 * 2; overhead = 14 * 5 * 125; end
+		if (mageInks[itemid]   ) then per_deck = 14 * 5 * 2;      overhead = 14 * 5 * 125; end
 	end
 
 
@@ -323,9 +333,9 @@ function lib.Search(item)
 	--
 	-- heavy parchment: 0.12.50
 	if (get("insane.craft.demon")) then
-		if (demon50Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 10 * 2; overhead = 14 * 5 * 1250; end
-		if (demon25Herbs[item[Const.ITEMID]]) then per_deck = 14 * 5 * 20 * 2; overhead = 14 * 5 * 1250; end
-		if (demonInks[item[Const.ITEMID]]   ) then per_deck = 14 * 5 * 2;      overhead = 14 * 5 * 1250; end
+		if (demon50Herbs[itemid]) then per_deck = 14 * 5 * 10 * 2; overhead = 14 * 5 * 1250; end
+		if (demon25Herbs[itemid]) then per_deck = 14 * 5 * 20 * 2; overhead = 14 * 5 * 1250; end
+		if (demonInks[itemid]   ) then per_deck = 14 * 5 * 2;      overhead = 14 * 5 * 1250; end
 	end
 
 	-- vanilla crafted
@@ -334,9 +344,9 @@ function lib.Search(item)
 	--
 	-- heavy parchment: 0.12.50
 	if (get("insane.craft.vanilla")) then
-		if (vanilla50Herbs[item[Const.ITEMID]]) then per_deck = 8 * 10 * 5; overhead = 8 * 1250; end
-		if (vanilla25Herbs[item[Const.ITEMID]]) then per_deck = 8 * 20 * 5; overhead = 8 * 1250; end
-		if (vanillaInks[item[Const.ITEMID]]   ) then per_deck = 8 * 5;      overhead = 8 * 1250; end
+		if (vanilla50Herbs[itemid]) then per_deck = 8 * 10 * 5; overhead = 8 * 1250; end
+		if (vanilla25Herbs[itemid]) then per_deck = 8 * 20 * 5; overhead = 8 * 1250; end
+		if (vanillaInks[itemid]   ) then per_deck = 8 * 5;      overhead = 8 * 1250; end
 	end
 
 	-- BC crafted
@@ -345,9 +355,9 @@ function lib.Search(item)
 	--
 	-- resilient parchment: 0.50.00
 	if (get("insane.craft.tbc")) then
-		if (tbc50Herbs[item[Const.ITEMID]]) then per_deck = 8 * 10 * 3; overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
-		if (tbc25Herbs[item[Const.ITEMID]]) then per_deck = 8 * 20 * 3; overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
-		if (tbcInks[item[Const.ITEMID]]   ) then per_deck = 8 * 3;      overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
+		if (tbc50Herbs[itemid]) then per_deck = 8 * 10 * 3; overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
+		if (tbc25Herbs[itemid]) then per_deck = 8 * 20 * 3; overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
+		if (tbcInks[itemid]   ) then per_deck = 8 * 3;      overhead = 8 * (5000 + (3 * get("insane.overhead.primal"))); end
 	end
 
 	-- WotLK crafted
@@ -357,11 +367,12 @@ function lib.Search(item)
 	--
 	-- resilient parchment: 0.50.00
 	if (get("insane.craft.wotlk")) then
-		if (wotlk50Herbs[item[Const.ITEMID]] ) then per_deck = 8 * 10 * 6 * 2; overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
-		if (wotlk25Herbs[item[Const.ITEMID]] ) then per_deck = 8 * 20 * 6 * 2; overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
-		if (wotlkPigments[item[Const.ITEMID]]) then per_deck = 8 * 6 * 2;      overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
-		if (wotlkInks[item[Const.ITEMID]]    ) then per_deck = 8 * 6;          overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+		if (wotlk50Herbs[itemid] ) then per_deck = 8 * 10 * 6 * 2; overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+		if (wotlk25Herbs[itemid] ) then per_deck = 8 * 20 * 6 * 2; overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+		if (wotlkPigments[itemid]) then per_deck = 8 * 6 * 2;      overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
+		if (wotlkInks[itemid]    ) then per_deck = 8 * 6;          overhead = 8 * (5000 + (3 * get("insane.overhead.eternal"))); end
 	end
+
 
 	if (per_deck > 0) then
 		if (priceper <= (limit - overhead) / per_deck) then
@@ -370,6 +381,30 @@ function lib.Search(item)
 		end
 	end
 
+
+	--
+	-- Eternal & Primal Lifes
+	--
+
+	local life_percent = 0;
+	if (get("insane.mats.primal")) then
+		local p1 = get("insane.overhead.primal");
+		if ((itemid == 21886) and (priceper <= p1)) then life_percent = priceper / p1; end
+		if ((itemid == 22575) and (priceper*10 <= p1)) then life_percent = (priceper * 10) / p1; end
+	end
+	if (get("insane.mats.eternal")) then
+		local p2 = get("insane.overhead.eternal");
+		if ((itemid == 35625) and (priceper <= p2)) then life_percent = priceper / p2; end
+		if ((itemid == 37704) and (priceper*10 <= p2)) then life_percent = (priceper * 10) / p2; end
+	end
+	if (life_percent > 0) then
+		return string.format("%2d%%", 100 * life_percent);
+	end
+
+
+	--
+	-- drop out
+	--
 	return false, "nope";
 end
 

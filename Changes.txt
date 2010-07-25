@@ -20,4 +20,6 @@
  * show percentage cost of budget in results
 
 1.4
+ * optionally include primal/eternal lifes in results
+ * better options pane layout
  * ?
